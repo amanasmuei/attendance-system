@@ -37,41 +37,82 @@ curl -O https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/w
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#2196F3">
-  <title>Attendance System</title>
-  <link rel="manifest" href="/manifest.json">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui; background: #1a1a1a; color: #fff; }
-    .container { position: relative; width: 100vw; height: 100vh; }
-    video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { position: absolute; top: 0; left: 0; }
-    .controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); }
-    button { padding: 15px 30px; margin: 0 10px; border: none; border-radius: 50px;
-             background: #2196F3; color: white; cursor: pointer; font-size: 16px; }
-    button:hover { background: #1976D2; }
-    #status { position: absolute; top: 20px; left: 20px; padding: 15px;
-              background: rgba(0,0,0,0.8); border-radius: 10px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <video id="video" autoplay playsinline></video>
-    <canvas id="overlay"></canvas>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2196F3" />
+    <title>Attendance System</title>
+    <link rel="manifest" href="/manifest.json" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui;
+        background: #1a1a1a;
+        color: #fff;
+      }
+      .container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .controls {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      button {
+        padding: 15px 30px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 50px;
+        background: #2196f3;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #1976d2;
+      }
+      #status {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="overlay"></canvas>
 
-    <div id="status">Loading...</div>
+      <div id="status">Loading...</div>
 
-    <div class="controls">
-      <button id="capture">Check In</button>
-      <button id="stop">Stop</button>
+      <div class="controls">
+        <button id="capture">Check In</button>
+        <button id="stop">Stop</button>
+      </div>
     </div>
-  </div>
 
-  <script type="module" src="/src/app.js"></script>
-</body>
+    <script type="module" src="/src/app.js"></script>
+  </body>
 </html>
 ```
 
@@ -97,12 +138,12 @@ class AttendanceApp {
       // 2. Start camera
       this.updateStatus('Starting camera...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 1280, height: 720 }
+        video: { facingMode: 'user', width: 1280, height: 720 },
       });
       this.video.srcObject = stream;
 
       // 3. Wait for video to be ready
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         this.video.onloadedmetadata = resolve;
       });
 
@@ -116,7 +157,6 @@ class AttendanceApp {
 
       // 6. Setup buttons
       this.setupButtons();
-
     } catch (error) {
       this.updateStatus('Error: ' + error.message);
     }
@@ -136,7 +176,7 @@ class AttendanceApp {
         // Resize and draw
         const resized = faceapi.resizeResults(detections, {
           width: this.canvas.width,
-          height: this.canvas.height
+          height: this.canvas.height,
         });
 
         faceapi.draw.drawDetections(this.canvas, resized);
@@ -152,8 +192,7 @@ class AttendanceApp {
   }
 
   getDominantEmotion(expressions) {
-    return Object.entries(expressions)
-      .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    return Object.entries(expressions).reduce((a, b) => (a[1] > b[1] ? a : b))[0];
   }
 
   setupButtons() {
@@ -167,7 +206,7 @@ class AttendanceApp {
     canvas.height = this.video.videoHeight;
     canvas.getContext('2d').drawImage(this.video, 0, 0);
 
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg'));
+    const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg'));
     console.log('Captured!', blob);
     this.updateStatus('Check-in successful!');
   }
@@ -216,22 +255,18 @@ const urlsToCache = [
   '/index.html',
   '/src/app.js',
   '/models/tiny_face_detector_model-weights_manifest.json',
-  '/models/face_expression_model-weights_manifest.json'
+  '/models/face_expression_model-weights_manifest.json',
 ];
 
 // Install
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)));
 });
 
 // Fetch
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    caches.match(event.request).then((response) => response || fetch(event.request))
   );
 });
 ```
@@ -249,10 +284,10 @@ export default defineConfig({
       manifest: {
         name: 'Attendance System',
         short_name: 'Attendance',
-        theme_color: '#2196F3'
-      }
-    })
-  ]
+        theme_color: '#2196F3',
+      },
+    }),
+  ],
 });
 ```
 
@@ -280,7 +315,7 @@ import { openDB } from 'idb';
 const db = await openDB('AttendanceDB', 1, {
   upgrade(db) {
     db.createObjectStore('attendance', { keyPath: 'id', autoIncrement: true });
-  }
+  },
 });
 
 // Save attendance
@@ -288,7 +323,7 @@ async function saveAttendance(data) {
   await db.add('attendance', {
     timestamp: Date.now(),
     emotion: data.emotion,
-    imageBlob: data.imageBlob
+    imageBlob: data.imageBlob,
   });
 }
 ```
@@ -313,13 +348,13 @@ const descriptor = detection.descriptor; // 128D Float32Array
 // Save for later matching
 await db.put('descriptors', {
   userId: 'user123',
-  descriptor: Array.from(descriptor)
+  descriptor: Array.from(descriptor),
 });
 
 // Match faces
 const savedDescriptors = await db.getAll('descriptors');
-const labeledDescriptors = savedDescriptors.map(d =>
-  new faceapi.LabeledFaceDescriptors(d.userId, [new Float32Array(d.descriptor)])
+const labeledDescriptors = savedDescriptors.map(
+  (d) => new faceapi.LabeledFaceDescriptors(d.userId, [new Float32Array(d.descriptor)])
 );
 
 const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
@@ -333,20 +368,24 @@ console.log('Matched user:', match.label, 'Distance:', match.distance);
 ## Key URLs and Resources
 
 ### Official Documentation
+
 - **MDN Web APIs**: https://developer.mozilla.org/en-US/docs/Web/API
 - **TensorFlow.js**: https://www.tensorflow.org/js/guide
 - **face-api.js**: https://github.com/justadudewhohacks/face-api.js
 
 ### Pre-trained Models
+
 - **face-api.js models**: https://github.com/justadudewhohacks/face-api.js/tree/master/weights
 - **TensorFlow.js models**: https://www.tensorflow.org/js/models
 
 ### Tools
+
 - **Lighthouse**: Chrome DevTools > Lighthouse tab
 - **PWA Builder**: https://www.pwabuilder.com/
 - **Workbox**: https://developers.google.com/web/tools/workbox
 
 ### Browser Support
+
 - **Can I Use**: https://caniuse.com/
 - **MDN Browser Compatibility**: Check each API page
 
@@ -355,6 +394,7 @@ console.log('Matched user:', match.label, 'Distance:', match.distance);
 ## Common Issues and Solutions
 
 ### Issue 1: Camera permission denied
+
 ```javascript
 try {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -366,6 +406,7 @@ try {
 ```
 
 ### Issue 2: Models not loading
+
 ```javascript
 // Check if models exist
 const response = await fetch('/models/tiny_face_detector_model-weights_manifest.json');
@@ -375,6 +416,7 @@ if (!response.ok) {
 ```
 
 ### Issue 3: HTTPS required
+
 ```bash
 # For local development with HTTPS
 npm install -D @vitejs/plugin-basic-ssl
@@ -388,6 +430,7 @@ export default defineConfig({
 ```
 
 ### Issue 4: Memory leaks
+
 ```javascript
 // Always dispose tensors
 import * as tf from '@tensorflow/tfjs';
@@ -492,12 +535,14 @@ netlify deploy --prod --dir=dist
 ## Budget Considerations
 
 **Free Tier Options:**
+
 - **Hosting**: Vercel, Netlify (free tier)
 - **Database**: Supabase, Firebase (free tier)
 - **Storage**: Cloudflare R2, Backblaze B2 (free tier)
 - **CDN**: Cloudflare (free)
 
 **Paid Services (if needed):**
+
 - **Backend**: AWS, Google Cloud, Azure (~$20-100/month)
 - **Database**: PostgreSQL on AWS RDS (~$15/month)
 - **Storage**: AWS S3 (~$5-20/month)
