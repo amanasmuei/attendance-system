@@ -110,3 +110,75 @@ export async function deleteExpiredUsers() {
   const now = Date.now();
   return await db.users.where('expiresAt').below(now).delete();
 }
+
+// Face Recognition specific helpers
+
+/**
+ * Get user by face descriptor match
+ */
+export async function getUserByFaceDescriptor(
+  descriptor: Float32Array,
+  threshold = 0.6
+): Promise<User | null> {
+  const users = await db.users.toArray();
+
+  for (const user of users) {
+    const userDescriptor = new Float32Array(user.faceDescriptor);
+    const distance = euclideanDistance(descriptor, userDescriptor);
+
+    if (distance < threshold) {
+      return user;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get all enrolled face descriptors for matching
+ */
+export async function getAllFaceDescriptors(): Promise<
+  Array<{ userId: string; userName: string; descriptor: Float32Array; enrolledAt: number }>
+> {
+  const users = await db.users.toArray();
+  return users.map((user) => ({
+    userId: user.userId,
+    userName: user.name,
+    descriptor: new Float32Array(user.faceDescriptor),
+    enrolledAt: user.enrolledAt,
+  }));
+}
+
+/**
+ * Update user's face descriptor
+ */
+export async function updateFaceDescriptor(userId: string, descriptor: Float32Array) {
+  return await db.users
+    .where('userId')
+    .equals(userId)
+    .modify({ faceDescriptor: Array.from(descriptor) });
+}
+
+/**
+ * Delete user and their face data
+ */
+export async function deleteUserFaceData(userId: string) {
+  return await db.users.where('userId').equals(userId).delete();
+}
+
+/**
+ * Calculate Euclidean distance between two face descriptors
+ */
+function euclideanDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+  if (descriptor1.length !== descriptor2.length) {
+    throw new Error('Descriptors must have same length');
+  }
+
+  let sum = 0;
+  for (let i = 0; i < descriptor1.length; i++) {
+    const diff = descriptor1[i] - descriptor2[i];
+    sum += diff * diff;
+  }
+
+  return Math.sqrt(sum);
+}
