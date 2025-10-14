@@ -6,12 +6,13 @@
 
 ```javascript
 // REGISTRATION
-navigator.serviceWorker.register('/sw.js')
-  .then(reg => console.log('SW registered:', reg))
-  .catch(err => console.error('SW error:', err));
+navigator.serviceWorker
+  .register('/sw.js')
+  .then((reg) => console.log('SW registered:', reg))
+  .catch((err) => console.error('SW error:', err));
 
 // CHECK IF REGISTERED
-navigator.serviceWorker.ready.then(reg => {
+navigator.serviceWorker.ready.then((reg) => {
   console.log('SW is active');
 });
 
@@ -26,56 +27,46 @@ registration.unregister();
 
 ```javascript
 // INSTALL EVENT
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open('v1').then(cache =>
-      cache.addAll(['/index.html', '/app.js'])
-    )
-  );
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open('v1').then((cache) => cache.addAll(['/index.html', '/app.js'])));
   self.skipWaiting(); // Activate immediately
 });
 
 // ACTIVATE EVENT
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== 'v1')
-          .map(key => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== 'v1').map((key) => caches.delete(key)))
       )
-    )
   );
   self.clients.claim(); // Take control immediately
 });
 
 // FETCH EVENT
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(res => res || fetch(event.request))
-  );
+self.addEventListener('fetch', (event) => {
+  event.respondWith(caches.match(event.request).then((res) => res || fetch(event.request)));
 });
 
 // MESSAGE EVENT
-self.addEventListener('message', event => {
+self.addEventListener('message', (event) => {
   if (event.data === 'skipWaiting') {
     self.skipWaiting();
   }
 });
 
 // BACKGROUND SYNC
-self.addEventListener('sync', event => {
+self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
     event.waitUntil(syncData());
   }
 });
 
 // PUSH NOTIFICATION
-self.addEventListener('push', event => {
+self.addEventListener('push', (event) => {
   const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title, data.options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, data.options));
 });
 ```
 
@@ -140,8 +131,8 @@ async function networkFirst(request) {
 async function staleWhileRevalidate(request) {
   const cached = await caches.match(request);
 
-  const fetchPromise = fetch(request).then(response => {
-    caches.open('dynamic').then(cache => {
+  const fetchPromise = fetch(request).then((response) => {
+    caches.open('dynamic').then((cache) => {
       cache.put(request, response.clone());
     });
     return response;
@@ -169,7 +160,7 @@ async function cacheOnly(request) {
 // BASIC VIDEO CAPTURE
 const stream = await navigator.mediaDevices.getUserMedia({
   video: true,
-  audio: false
+  audio: false,
 });
 
 // WITH CONSTRAINTS
@@ -177,20 +168,20 @@ const stream = await navigator.mediaDevices.getUserMedia({
   video: {
     width: { min: 640, ideal: 1280, max: 1920 },
     height: { min: 480, ideal: 720, max: 1080 },
-    aspectRatio: 16/9,
+    aspectRatio: 16 / 9,
     facingMode: 'user', // or 'environment'
-    frameRate: { ideal: 30, max: 60 }
-  }
+    frameRate: { ideal: 30, max: 60 },
+  },
 });
 
 // SPECIFIC DEVICE
 const stream = await navigator.mediaDevices.getUserMedia({
-  video: { deviceId: { exact: 'device-id-here' } }
+  video: { deviceId: { exact: 'device-id-here' } },
 });
 
 // ENUMERATE DEVICES
 const devices = await navigator.mediaDevices.enumerateDevices();
-const cameras = devices.filter(d => d.kind === 'videoinput');
+const cameras = devices.filter((d) => d.kind === 'videoinput');
 
 // ATTACH TO VIDEO ELEMENT
 const video = document.getElementById('video');
@@ -215,14 +206,14 @@ const constraints = videoTrack.getConstraints();
 // APPLY CONSTRAINTS
 await videoTrack.applyConstraints({
   width: 1920,
-  height: 1080
+  height: 1080,
 });
 
 // STOP TRACK
 videoTrack.stop();
 
 // STOP ALL TRACKS
-stream.getTracks().forEach(track => track.stop());
+stream.getTracks().forEach((track) => track.stop());
 ```
 
 **Capture Image from Video:**
@@ -238,7 +229,7 @@ canvas.getContext('2d').drawImage(video, 0, 0);
 const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
 // As Blob
-const blob = await new Promise(resolve => {
+const blob = await new Promise((resolve) => {
   canvas.toBlob(resolve, 'image/jpeg', 0.95);
 });
 
@@ -259,13 +250,13 @@ const db = await new Promise((resolve, reject) => {
   request.onsuccess = () => resolve(request.result);
   request.onerror = () => reject(request.error);
 
-  request.onupgradeneeded = event => {
+  request.onupgradeneeded = (event) => {
     const db = event.target.result;
 
     // Create object store
     const store = db.createObjectStore('users', {
       keyPath: 'id',
-      autoIncrement: true
+      autoIncrement: true,
     });
 
     // Create indexes
@@ -321,7 +312,7 @@ import { openDB } from 'idb';
 const db = await openDB('MyDB', 1, {
   upgrade(db) {
     db.createObjectStore('users', { keyPath: 'id' });
-  }
+  },
 });
 
 await db.put('users', { id: 1, name: 'John' });
@@ -351,23 +342,16 @@ const encrypted = await crypto.subtle.encrypt(
 );
 
 // DECRYPT
-const decrypted = await crypto.subtle.decrypt(
-  { name: 'AES-GCM', iv: iv },
-  key,
-  encrypted
-);
+const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, encrypted);
 
 // EXPORT KEY
 const exported = await crypto.subtle.exportKey('jwk', key);
 
 // IMPORT KEY
-const key = await crypto.subtle.importKey(
-  'jwk',
-  keyData,
-  { name: 'AES-GCM', length: 256 },
-  true,
-  ['encrypt', 'decrypt']
-);
+const key = await crypto.subtle.importKey('jwk', keyData, { name: 'AES-GCM', length: 256 }, true, [
+  'encrypt',
+  'decrypt',
+]);
 
 // HASH
 const hash = await crypto.subtle.digest(
@@ -384,32 +368,22 @@ const keyPair = await crypto.subtle.generateKey(
     name: 'RSA-OAEP',
     modulusLength: 2048,
     publicExponent: new Uint8Array([1, 0, 1]),
-    hash: 'SHA-256'
+    hash: 'SHA-256',
   },
   true,
   ['encrypt', 'decrypt']
 );
 
 // SIGN (HMAC)
-const key = await crypto.subtle.generateKey(
-  { name: 'HMAC', hash: 'SHA-256' },
-  true,
-  ['sign', 'verify']
-);
+const key = await crypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, true, [
+  'sign',
+  'verify',
+]);
 
-const signature = await crypto.subtle.sign(
-  'HMAC',
-  key,
-  data
-);
+const signature = await crypto.subtle.sign('HMAC', key, data);
 
 // VERIFY
-const valid = await crypto.subtle.verify(
-  'HMAC',
-  key,
-  signature,
-  data
-);
+const valid = await crypto.subtle.verify('HMAC', key, signature, data);
 ```
 
 ---
@@ -436,21 +410,21 @@ if (permission === 'granted') {
     timestamp: Date.now(),
     actions: [
       { action: 'view', title: 'View', icon: '/view.png' },
-      { action: 'close', title: 'Close', icon: '/close.png' }
-    ]
+      { action: 'close', title: 'Close', icon: '/close.png' },
+    ],
   });
 }
 
 // NOTIFICATION EVENTS
-notification.onclick = event => {
+notification.onclick = (event) => {
   console.log('Clicked');
 };
 
-notification.onclose = event => {
+notification.onclose = (event) => {
   console.log('Closed');
 };
 
-notification.onerror = event => {
+notification.onerror = (event) => {
   console.log('Error');
 };
 
@@ -458,7 +432,7 @@ notification.onerror = event => {
 self.registration.showNotification('Title', options);
 
 // HANDLE NOTIFICATION CLICK IN SW
-self.addEventListener('notificationclick', event => {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'view') {
@@ -477,7 +451,7 @@ const registration = await navigator.serviceWorker.ready;
 
 const subscription = await registration.pushManager.subscribe({
   userVisibleOnly: true,
-  applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY'
+  applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY',
 });
 
 // GET SUBSCRIPTION
@@ -490,18 +464,18 @@ await subscription.unsubscribe();
 await fetch('/api/subscribe', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(subscription)
+  body: JSON.stringify(subscription),
 });
 
 // HANDLE PUSH IN SERVICE WORKER
-self.addEventListener('push', event => {
+self.addEventListener('push', (event) => {
   const data = event.data.json();
 
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: data.icon,
-      data: data.data
+      data: data.data,
     })
   );
 });
@@ -586,37 +560,22 @@ await faceapi.nets.faceExpressionNet.loadFromUri('/models');
 await faceapi.nets.ageGenderNet.loadFromUri('/models');
 
 // DETECT SINGLE FACE
-const detection = await faceapi.detectSingleFace(
-  input,
-  new faceapi.TinyFaceDetectorOptions()
-);
+const detection = await faceapi.detectSingleFace(input, new faceapi.TinyFaceDetectorOptions());
 
 // DETECT ALL FACES
-const detections = await faceapi.detectAllFaces(
-  input,
-  new faceapi.SsdMobilenetv1Options()
-);
+const detections = await faceapi.detectAllFaces(input, new faceapi.SsdMobilenetv1Options());
 
 // WITH LANDMARKS
-const detection = await faceapi
-  .detectSingleFace(input)
-  .withFaceLandmarks();
+const detection = await faceapi.detectSingleFace(input).withFaceLandmarks();
 
 // WITH DESCRIPTORS
-const detection = await faceapi
-  .detectSingleFace(input)
-  .withFaceLandmarks()
-  .withFaceDescriptor();
+const detection = await faceapi.detectSingleFace(input).withFaceLandmarks().withFaceDescriptor();
 
 // WITH EXPRESSIONS
-const detection = await faceapi
-  .detectSingleFace(input)
-  .withFaceExpressions();
+const detection = await faceapi.detectSingleFace(input).withFaceExpressions();
 
 // WITH AGE AND GENDER
-const detection = await faceapi
-  .detectSingleFace(input)
-  .withAgeAndGender();
+const detection = await faceapi.detectSingleFace(input).withAgeAndGender();
 
 // EVERYTHING
 const detection = await faceapi
@@ -629,18 +588,18 @@ const detection = await faceapi
 // DETECTOR OPTIONS
 new faceapi.TinyFaceDetectorOptions({
   inputSize: 416, // 128, 160, 224, 320, 416, 512, 608
-  scoreThreshold: 0.5
+  scoreThreshold: 0.5,
 });
 
 new faceapi.SsdMobilenetv1Options({
   minConfidence: 0.5,
-  maxResults: 10
+  maxResults: 10,
 });
 
 // FACE MATCHING
 const descriptors = [
   new faceapi.LabeledFaceDescriptors('person1', [descriptor1]),
-  new faceapi.LabeledFaceDescriptors('person2', [descriptor2])
+  new faceapi.LabeledFaceDescriptors('person2', [descriptor2]),
 ];
 
 const faceMatcher = new faceapi.FaceMatcher(descriptors, 0.6);
@@ -667,20 +626,20 @@ drawBox.draw(canvas);
 
 ## Browser Compatibility Table (2025)
 
-| Feature | Chrome | Firefox | Safari | Edge | Mobile |
-|---------|--------|---------|--------|------|--------|
-| Service Workers | 40+ ✅ | 44+ ✅ | 11.1+ ✅ | 17+ ✅ | iOS 11.3+ ✅ |
-| Cache API | 43+ ✅ | 41+ ✅ | 11.1+ ✅ | 79+ ✅ | iOS 11.3+ ✅ |
-| getUserMedia | 53+ ✅ | 36+ ✅ | 11+ ✅ | 79+ ✅ | iOS 11+ ⚠️ |
-| IndexedDB | 24+ ✅ | 16+ ✅ | 10+ ✅ | 79+ ✅ | iOS 10+ ✅ |
-| Web Crypto | 37+ ✅ | 34+ ✅ | 11+ ✅ | 79+ ✅ | iOS 11+ ✅ |
-| Notifications | 22+ ✅ | 22+ ✅ | 16.4+ ⚠️ | 79+ ✅ | iOS 16.4+ ⚠️ |
-| Push API | 50+ ✅ | 44+ ✅ | 16.4+ ⚠️ | 79+ ✅ | Android ✅ |
-| WebGL | 9+ ✅ | 4+ ✅ | 5.1+ ✅ | 79+ ✅ | iOS 8+ ✅ |
-| WebAssembly | 57+ ✅ | 52+ ✅ | 11+ ✅ | 79+ ✅ | iOS 11+ ✅ |
-| MediaRecorder | 47+ ✅ | 25+ ✅ | 14.1+ ✅ | 79+ ✅ | iOS 14.3+ ✅ |
-| ImageCapture | 59+ ✅ | ❌ | ❌ | 79+ ✅ | Android ✅ |
-| WebGPU | 113+ 🧪 | 🚧 | ❌ | 113+ 🧪 | ❌ |
+| Feature         | Chrome  | Firefox | Safari   | Edge    | Mobile       |
+| --------------- | ------- | ------- | -------- | ------- | ------------ |
+| Service Workers | 40+ ✅  | 44+ ✅  | 11.1+ ✅ | 17+ ✅  | iOS 11.3+ ✅ |
+| Cache API       | 43+ ✅  | 41+ ✅  | 11.1+ ✅ | 79+ ✅  | iOS 11.3+ ✅ |
+| getUserMedia    | 53+ ✅  | 36+ ✅  | 11+ ✅   | 79+ ✅  | iOS 11+ ⚠️   |
+| IndexedDB       | 24+ ✅  | 16+ ✅  | 10+ ✅   | 79+ ✅  | iOS 10+ ✅   |
+| Web Crypto      | 37+ ✅  | 34+ ✅  | 11+ ✅   | 79+ ✅  | iOS 11+ ✅   |
+| Notifications   | 22+ ✅  | 22+ ✅  | 16.4+ ⚠️ | 79+ ✅  | iOS 16.4+ ⚠️ |
+| Push API        | 50+ ✅  | 44+ ✅  | 16.4+ ⚠️ | 79+ ✅  | Android ✅   |
+| WebGL           | 9+ ✅   | 4+ ✅   | 5.1+ ✅  | 79+ ✅  | iOS 8+ ✅    |
+| WebAssembly     | 57+ ✅  | 52+ ✅  | 11+ ✅   | 79+ ✅  | iOS 11+ ✅   |
+| MediaRecorder   | 47+ ✅  | 25+ ✅  | 14.1+ ✅ | 79+ ✅  | iOS 14.3+ ✅ |
+| ImageCapture    | 59+ ✅  | ❌      | ❌       | 79+ ✅  | Android ✅   |
+| WebGPU          | 113+ 🧪 | 🚧      | ❌       | 113+ 🧪 | ❌           |
 
 Legend: ✅ Full Support | ⚠️ Partial Support | ❌ No Support | 🧪 Experimental | 🚧 In Development
 
@@ -709,7 +668,7 @@ async function registerBackgroundSync() {
 }
 
 // In service worker
-self.addEventListener('sync', event => {
+self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
     event.waitUntil(syncAllData());
   }
@@ -742,7 +701,7 @@ updateUI(data);
 await db.put('store', data);
 
 // Sync to server in background
-syncToServer(data).catch(error => {
+syncToServer(data).catch((error) => {
   // Revert UI on error
   revertUI(data);
 });
@@ -786,7 +745,7 @@ try {
 }
 
 // Service Worker errors
-navigator.serviceWorker.register('/sw.js').catch(error => {
+navigator.serviceWorker.register('/sw.js').catch((error) => {
   console.error('SW registration failed:', error);
 });
 ```
@@ -831,7 +790,10 @@ navigator.serviceWorker.getRegistrations().then(console.log);
 
 // Check cache contents
 caches.keys().then(console.log);
-caches.open('v1').then(cache => cache.keys()).then(console.log);
+caches
+  .open('v1')
+  .then((cache) => cache.keys())
+  .then(console.log);
 
 // Check IndexedDB
 indexedDB.databases().then(console.log);
@@ -855,5 +817,6 @@ navigator.storage.estimate().then(console.log);
 ---
 
 For complete implementation details, see:
+
 - **Main Documentation**: PWA_FACE_RECOGNITION_DOCUMENTATION.md
 - **Quick Start**: QUICK_START_GUIDE.md
