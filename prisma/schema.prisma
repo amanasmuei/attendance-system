@@ -1,0 +1,128 @@
+// Prisma schema for Event Attendance System with Face Recognition
+// Based on specification from GitHub issue #1
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ORGANIZER
+  ATTENDEE
+}
+
+enum CheckInMethod {
+  FACE_RECOGNITION
+  MANUAL
+  QR_CODE
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  name          String
+  staffId       String          @unique
+  role          UserRole        @default(ATTENDEE)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  biometric     UserBiometric?
+  attendance    Attendance[]
+  consents      Consent[]
+  organizedEvents Event[]       @relation("Organizer")
+  recognitionLogs FaceRecognitionLog[] @relation("RecognitionAttempts")
+  matchedLogs   FaceRecognitionLog[]   @relation("SuccessfulMatches")
+
+  @@index([staffId])
+}
+
+model UserBiometric {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  embeddingEncrypted  Bytes     // pgcrypto encrypted
+  embeddingHash       String    // SHA-256 hash for quick lookup
+  enrolledAt          DateTime  @default(now())
+  expiresAt           DateTime  // 6 months from enrollment
+  consentTimestamp    DateTime
+  sampleCount         Int       @default(3)
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model Event {
+  id            String          @id @default(cuid())
+  name          String
+  description   String?
+  startTime     DateTime
+  endTime       DateTime
+  location      String
+  organizerId   String
+  isActive      Boolean         @default(true)
+  settings      Json            // { requireFaceRecognition, trackEmotions, etc. }
+  createdAt     DateTime        @default(now())
+
+  organizer     User            @relation("Organizer", fields: [organizerId], references: [id])
+  attendance    Attendance[]
+  recognitionLogs FaceRecognitionLog[]
+
+  @@index([startTime, endTime])
+}
+
+model Attendance {
+  id              String          @id @default(cuid())
+  userId          String
+  eventId         String
+  checkInTime     DateTime        @default(now())
+  checkOutTime    DateTime?
+  method          CheckInMethod
+  faceConfidence  Float?          // 0-1 confidence score
+  emotionData     Json?           // { emotion: "happy", confidence: 0.85, timestamp }
+  verified        Boolean         @default(false)
+  syncedAt        DateTime?
+
+  user            User            @relation(fields: [userId], references: [id])
+  event           Event           @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId, checkInTime])
+  @@index([eventId, checkInTime])
+  @@index([userId])
+}
+
+model Consent {
+  id              String          @id @default(cuid())
+  userId          String
+  timestamp       DateTime        @default(now())
+  consentVersion  String          // e.g., "1.0"
+  purpose         String          // "attendance_tracking"
+  retentionPeriod String          // "6_months"
+  acknowledged    Boolean         @default(true)
+  withdrawnAt     DateTime?
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, withdrawnAt])
+}
+
+model FaceRecognitionLog {
+  id              String          @id @default(cuid())
+  userId          String?         // User who attempted check-in
+  eventId         String
+  timestamp       DateTime        @default(now())
+  success         Boolean
+  confidence      Float
+  attemptedImage  String?         // S3 URL or base64 (for audit only)
+  matchedUserId   String?         // Actual matched user
+
+  attemptUser     User?           @relation("RecognitionAttempts", fields: [userId], references: [id])
+  matchedUser     User?           @relation("SuccessfulMatches", fields: [matchedUserId], references: [id])
+  event           Event           @relation(fields: [eventId], references: [id])
+
+  @@index([eventId, timestamp])
+}

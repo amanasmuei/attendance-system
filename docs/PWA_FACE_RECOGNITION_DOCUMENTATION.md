@@ -1,6 +1,7 @@
 # Comprehensive Framework Documentation for PWA with Face Recognition and Emotion Analysis
 
 ## Project Overview
+
 Building a Progressive Web App (PWA) for event attendance tracking using face recognition and emotion analysis. This document provides complete technical documentation, API references, and best practices.
 
 ---
@@ -10,10 +11,12 @@ Building a Progressive Web App (PWA) for event attendance tracking using face re
 ### 1.1 Service Worker API
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
 - web.dev: https://web.dev/learn/pwa/service-workers
 
 **Key Characteristics:**
+
 - Event-driven JavaScript workers running in separate thread
 - Act as proxy servers between web apps, browsers, and networks
 - HTTPS-only requirement (secure contexts)
@@ -21,39 +24,35 @@ Building a Progressive Web App (PWA) for event attendance tracking using face re
 - Designed for asynchronous operations
 
 **Lifecycle:**
+
 ```javascript
 // 1. Registration
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(registration => {
+  navigator.serviceWorker
+    .register('/sw.js')
+    .then((registration) => {
       console.log('SW registered:', registration);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('SW registration failed:', error);
     });
 }
 
 // 2. Installation (sw.js)
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open('attendance-v1').then(cache => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/styles.css',
-        '/app.js',
-        '/face-models/'
-      ]);
+    caches.open('attendance-v1').then((cache) => {
+      return cache.addAll(['/', '/index.html', '/styles.css', '/app.js', '/face-models/']);
     })
   );
 });
 
 // 3. Activation
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map((cacheName) => {
           if (cacheName !== 'attendance-v1') {
             return caches.delete(cacheName);
           }
@@ -64,9 +63,9 @@ self.addEventListener('activate', event => {
 });
 
 // 4. Fetch Interception
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then(response => {
+    caches.match(event.request).then((response) => {
       return response || fetch(event.request);
     })
   );
@@ -76,10 +75,11 @@ self.addEventListener('fetch', event => {
 **Caching Strategies:**
 
 1. **Cache First (for static assets)**
+
 ```javascript
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
+    caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request);
     })
   );
@@ -87,22 +87,21 @@ self.addEventListener('fetch', event => {
 ```
 
 2. **Network First (for dynamic data)**
+
 ```javascript
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request)
-      .catch(() => caches.match(event.request))
-  );
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
 ```
 
 3. **Stale While Revalidate (for ML models)**
+
 ```javascript
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.open('models').then(cache => {
-      return cache.match(event.request).then(response => {
-        const fetchPromise = fetch(event.request).then(networkResponse => {
+    caches.open('models').then((cache) => {
+      return cache.match(event.request).then((response) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
           cache.put(event.request, networkResponse.clone());
           return networkResponse;
         });
@@ -114,6 +113,7 @@ self.addEventListener('fetch', event => {
 ```
 
 **Core Interfaces:**
+
 - `ServiceWorkerContainer`: Main registration interface
 - `ServiceWorkerRegistration`: Registration management
 - `FetchEvent`: Network request interception
@@ -125,10 +125,12 @@ self.addEventListener('fetch', event => {
 ### 1.2 Web App Manifest
 
 **Official Specifications:**
+
 - W3C Technical Report: https://www.w3.org/TR/appmanifest/
 - MDN: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest
 
 **Complete Manifest Example:**
+
 ```json
 {
   "name": "Event Attendance System",
@@ -206,6 +208,7 @@ self.addEventListener('fetch', event => {
 ```
 
 **Browser Support (2025):**
+
 - Chrome/Edge: Full support
 - Safari: Full support
 - Firefox: Full support (including Windows PWA installation since v143.0)
@@ -216,19 +219,23 @@ self.addEventListener('fetch', event => {
 ### 1.3 Cache API
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching
 - web.dev: https://web.dev/learn/pwa/caching
 
 **Storage Quotas (2025):**
+
 - Cache API can use up to 60% of total disk space
 - Example: 64GB disk = ~38GB available for cache
 - Storage is persistent by default in modern browsers
 
 **Cache API vs IndexedDB:**
+
 - **Cache API**: Network resources (HTML, CSS, JS, images, models)
 - **IndexedDB**: Structured data, user profiles, attendance records
 
 **Complete Implementation:**
+
 ```javascript
 // Open or create cache
 const cacheName = 'attendance-cache-v1';
@@ -243,7 +250,7 @@ async function cacheResources() {
     '/app.js',
     '/models/face-detection-model.json',
     '/models/face-landmarks-model.json',
-    '/models/emotion-recognition-model.json'
+    '/models/emotion-recognition-model.json',
   ];
   await cache.addAll(resources);
 }
@@ -265,7 +272,7 @@ async function updateCache(url, response) {
 async function deleteOldCaches() {
   const cacheNames = await caches.keys();
   await Promise.all(
-    cacheNames.map(name => {
+    cacheNames.map((name) => {
       if (name !== cacheName) {
         return caches.delete(name);
       }
@@ -279,16 +286,19 @@ async function deleteOldCaches() {
 ### 1.4 Push Notifications API
 
 **Official Documentation:**
+
 - MDN Push API: https://developer.mozilla.org/en-US/docs/Web/API/Push_API
 - MDN Notifications Tutorial: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Tutorials/js13kGames/Re-engageable_Notifications_Push
 
 **Use Cases for Attendance System:**
+
 - Event start reminders
 - Check-in confirmations
 - Late attendance alerts
 - Event updates
 
 **Implementation Example:**
+
 ```javascript
 // 1. Request notification permission
 async function requestNotificationPermission() {
@@ -305,19 +315,19 @@ async function subscribeToPush() {
   const registration = await navigator.serviceWorker.ready;
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY'
+    applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY',
   });
 
   // Send subscription to server
   await fetch('/api/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(subscription)
+    body: JSON.stringify(subscription),
   });
 }
 
 // 3. Handle push events in service worker
-self.addEventListener('push', event => {
+self.addEventListener('push', (event) => {
   const data = event.data.json();
 
   const options = {
@@ -327,41 +337,38 @@ self.addEventListener('push', event => {
     vibrate: [200, 100, 200],
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: data.primaryKey
+      primaryKey: data.primaryKey,
     },
     actions: [
       {
         action: 'check-in',
         title: 'Check In Now',
-        icon: '/icons/checkin.png'
+        icon: '/icons/checkin.png',
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/icons/close.png'
-      }
+        icon: '/icons/close.png',
+      },
     ],
-    timestamp: data.timestamp
+    timestamp: data.timestamp,
   };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 // 4. Handle notification clicks
-self.addEventListener('notificationclick', event => {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'check-in') {
-    event.waitUntil(
-      clients.openWindow('/checkin')
-    );
+    event.waitUntil(clients.openWindow('/checkin'));
   }
 });
 ```
 
 **Notification Scheduling:**
+
 ```javascript
 // Schedule future notification
 async function scheduleNotification(title, body, timestamp) {
@@ -375,7 +382,7 @@ async function scheduleNotification(title, body, timestamp) {
       await registration.showNotification(title, {
         body,
         timestamp,
-        requireInteraction: true
+        requireInteraction: true,
       });
     }, delay);
   }
@@ -389,17 +396,20 @@ async function scheduleNotification(title, body, timestamp) {
 ### 2.1 getUserMedia() - Camera Access
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 - W3C Specification: https://www.w3.org/TR/mediacapture-streams/
 - 2025 Guide: https://blog.addpipe.com/getusermedia-getting-started/
 
 **Security Requirements:**
+
 - HTTPS only (secure contexts)
 - User permission required
 - Browser shows active camera indicator
 - Must work in origin context
 
 **Basic Implementation:**
+
 ```javascript
 async function initCamera() {
   try {
@@ -408,9 +418,9 @@ async function initCamera() {
         width: { ideal: 1280 },
         height: { ideal: 720 },
         facingMode: 'user', // Front camera
-        frameRate: { ideal: 30, max: 60 }
+        frameRate: { ideal: 30, max: 60 },
       },
-      audio: false
+      audio: false,
     });
 
     const videoElement = document.getElementById('video');
@@ -447,11 +457,12 @@ function handleCameraError(error) {
 ```
 
 **Advanced Constraints:**
+
 ```javascript
 // Get list of available cameras
 async function getCameraList() {
   const devices = await navigator.mediaDevices.enumerateDevices();
-  return devices.filter(device => device.kind === 'videoinput');
+  return devices.filter((device) => device.kind === 'videoinput');
 }
 
 // Select specific camera
@@ -461,8 +472,8 @@ async function selectCamera(deviceId) {
       deviceId: { exact: deviceId },
       width: { min: 640, ideal: 1280, max: 1920 },
       height: { min: 480, ideal: 720, max: 1080 },
-      aspectRatio: { ideal: 16/9 }
-    }
+      aspectRatio: { ideal: 16 / 9 },
+    },
   });
   return stream;
 }
@@ -471,17 +482,18 @@ async function selectCamera(deviceId) {
 async function switchCamera(currentFacingMode) {
   const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: newFacingMode }
+    video: { facingMode: newFacingMode },
   });
   return stream;
 }
 ```
 
 **Stopping Camera:**
+
 ```javascript
 function stopCamera(stream) {
   if (stream) {
-    stream.getTracks().forEach(track => {
+    stream.getTracks().forEach((track) => {
       track.stop();
     });
   }
@@ -493,10 +505,12 @@ function stopCamera(stream) {
 ### 2.2 MediaStream Image Capture API
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Image_Capture_API
 - Taking Photos: https://developer.mozilla.org/en-US/docs/Web/API/Media_Capture_and_Streams_API/Taking_still_photos
 
 **Capturing Images from Video Stream:**
+
 ```javascript
 // Method 1: Canvas-based capture
 function captureImageFromVideo(videoElement) {
@@ -508,10 +522,14 @@ function captureImageFromVideo(videoElement) {
   context.drawImage(videoElement, 0, 0);
 
   // Get as Blob for storage
-  return new Promise(resolve => {
-    canvas.toBlob(blob => {
-      resolve(blob);
-    }, 'image/jpeg', 0.95);
+  return new Promise((resolve) => {
+    canvas.toBlob(
+      (blob) => {
+        resolve(blob);
+      },
+      'image/jpeg',
+      0.95
+    );
   });
 }
 
@@ -528,7 +546,7 @@ async function captureWithImageCapture(stream) {
   const photoSettings = {
     imageHeight: capabilities.imageHeight.max,
     imageWidth: capabilities.imageWidth.max,
-    fillLightMode: 'flash'
+    fillLightMode: 'flash',
   };
 
   const blob = await imageCapture.takePhoto(photoSettings);
@@ -541,10 +559,12 @@ async function captureWithImageCapture(stream) {
 ### 2.3 MediaRecorder API
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
 - Chrome Tutorial: https://developer.chrome.com/blog/mediarecorder
 
 **Recording Video for Analysis:**
+
 ```javascript
 class VideoRecorder {
   constructor(stream) {
@@ -556,7 +576,7 @@ class VideoRecorder {
   start(timeslice = 1000) {
     const options = {
       mimeType: 'video/webm;codecs=vp9',
-      videoBitsPerSecond: 2500000
+      videoBitsPerSecond: 2500000,
     };
 
     // Check MIME type support
@@ -566,7 +586,7 @@ class VideoRecorder {
 
     this.recorder = new MediaRecorder(this.stream, options);
 
-    this.recorder.ondataavailable = event => {
+    this.recorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
         this.chunks.push(event.data);
       }
@@ -576,10 +596,10 @@ class VideoRecorder {
   }
 
   stop() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.recorder.onstop = () => {
         const blob = new Blob(this.chunks, {
-          type: this.recorder.mimeType
+          type: this.recorder.mimeType,
         });
         this.chunks = [];
         resolve(blob);
@@ -598,7 +618,7 @@ async function recordAttendance() {
   recorder.start();
 
   // Record for 5 seconds
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const videoBlob = await recorder.stop();
 
@@ -614,11 +634,13 @@ async function recordAttendance() {
 ### 3.1 TensorFlow.js
 
 **Official Documentation:**
+
 - TensorFlow.js: https://www.tensorflow.org/js
 - TensorFlow.js Models: https://www.tensorflow.org/js/models
 - Face Detection: https://github.com/tensorflow/tfjs-models/tree/master/face-detection
 
 **Installation:**
+
 ```bash
 npm install @tensorflow/tfjs
 npm install @tensorflow-models/face-detection
@@ -626,6 +648,7 @@ npm install @tensorflow-models/face-landmarks-detection
 ```
 
 **Basic Setup:**
+
 ```javascript
 import * as tf from '@tensorflow/tfjs';
 import * as faceDetection from '@tensorflow-models/face-detection';
@@ -639,14 +662,14 @@ const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
 const detectorConfig = {
   runtime: 'tfjs', // or 'mediapipe'
   maxFaces: 5,
-  refineLandmarks: true
+  refineLandmarks: true,
 };
 const detector = await faceDetection.createDetector(model, detectorConfig);
 
 // Detect faces in video
 async function detectFaces(videoElement) {
   const faces = await detector.estimateFaces(videoElement, {
-    flipHorizontal: false
+    flipHorizontal: false,
   });
 
   return faces;
@@ -656,21 +679,24 @@ async function detectFaces(videoElement) {
 **Available Models:**
 
 1. **BlazeFace** - Fast, lightweight (190KB)
+
 ```javascript
 const model = faceDetection.SupportedModels.BlazeFace;
 const detector = await faceDetection.createDetector(model);
 ```
 
 2. **MediaPipe Face Detector** - More accurate
+
 ```javascript
 const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
 const detector = await faceDetection.createDetector(model, {
   runtime: 'tfjs',
-  maxFaces: 10
+  maxFaces: 10,
 });
 ```
 
 **Face Landmarks Detection:**
+
 ```javascript
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 
@@ -678,19 +704,17 @@ const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
 const detectorConfig = {
   runtime: 'tfjs',
   refineLandmarks: true,
-  maxFaces: 1
+  maxFaces: 1,
 };
 
-const detector = await faceLandmarksDetection.createDetector(
-  model,
-  detectorConfig
-);
+const detector = await faceLandmarksDetection.createDetector(model, detectorConfig);
 
 // Detect 468 3D facial landmarks
 const faces = await detector.estimateFaces(videoElement);
 ```
 
 **Performance Optimization:**
+
 ```javascript
 // Model caching
 const MODEL_URL = '/models/face-detection';
@@ -718,11 +742,13 @@ function cleanupTensors() {
 ### 3.2 face-api.js
 
 **Official Documentation:**
+
 - GitHub: https://github.com/justadudewhohacks/face-api.js
 - API Docs: https://justadudewhohacks.github.io/face-api.js/docs/index.html
 - Alternative Fork (vladmandic): https://github.com/vladmandic/face-api
 
 **Features:**
+
 - Face detection (SSD MobileNet V1, Tiny Face Detector, MTCNN)
 - Face landmarks (68 points or 5 points)
 - Face recognition (128D face descriptors)
@@ -730,11 +756,13 @@ function cleanupTensors() {
 - Age and gender estimation
 
 **Installation:**
+
 ```bash
 npm install face-api.js
 ```
 
 **Complete Implementation:**
+
 ```javascript
 import * as faceapi from 'face-api.js';
 
@@ -747,7 +775,7 @@ async function loadModels() {
     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-    faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
+    faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
   ]);
 }
 
@@ -773,7 +801,7 @@ class FaceRecognizer {
   async addFace(label, descriptor) {
     this.labeledDescriptors.push({
       label,
-      descriptors: [descriptor]
+      descriptors: [descriptor],
     });
   }
 
@@ -795,14 +823,12 @@ function analyzeEmotions(detection) {
 
   // Get dominant emotion
   const emotions = Object.entries(expressions);
-  const dominant = emotions.reduce((prev, current) =>
-    current[1] > prev[1] ? current : prev
-  );
+  const dominant = emotions.reduce((prev, current) => (current[1] > prev[1] ? current : prev));
 
   return {
     dominant: dominant[0],
     confidence: dominant[1],
-    all: expressions
+    all: expressions,
   };
 }
 
@@ -811,7 +837,7 @@ async function startDetection(videoElement) {
   const canvas = document.getElementById('overlay');
   const displaySize = {
     width: videoElement.width,
-    height: videoElement.height
+    height: videoElement.height,
   };
 
   faceapi.matchDimensions(canvas, displaySize);
@@ -829,7 +855,7 @@ async function startDetection(videoElement) {
     faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
 
     // Process each face
-    resizedDetections.forEach(detection => {
+    resizedDetections.forEach((detection) => {
       const emotions = analyzeEmotions(detection);
       console.log('Dominant emotion:', emotions.dominant);
     });
@@ -838,6 +864,7 @@ async function startDetection(videoElement) {
 ```
 
 **Model Sizes:**
+
 - Tiny Face Detector: 190 KB
 - Face Landmark 68: 350 KB
 - Face Landmark 68 Tiny: 80 KB
@@ -846,6 +873,7 @@ async function startDetection(videoElement) {
 - Age Gender: 420 KB
 
 **Accuracy:**
+
 - Face Recognition: 99.38% on LFW benchmark
 - Expression Recognition: Reasonable accuracy (~85%), may decrease with glasses
 
@@ -854,21 +882,25 @@ async function startDetection(videoElement) {
 ### 3.3 ml5.js
 
 **Official Documentation:**
+
 - Website: https://ml5js.org/
 - Docs: https://docs.ml5js.org/
 - Learn: https://learn.ml5js.org/
 
 **Philosophy:**
+
 - Beginner-friendly, higher-level API
 - Built on TensorFlow.js
 - Focus on creative coding
 
 **Installation:**
+
 ```html
 <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
 ```
 
 **Face Detection Example:**
+
 ```javascript
 // Initialize face detection
 const faceapi = ml5.faceApi(videoElement, options, modelLoaded);
@@ -885,7 +917,7 @@ function gotResults(error, results) {
   }
 
   // Process face detections
-  results.forEach(face => {
+  results.forEach((face) => {
     console.log('Face detected:', face);
     console.log('Emotions:', face.expressions);
   });
@@ -902,22 +934,26 @@ function gotResults(error, results) {
 ### 3.4 ONNX Runtime Web
 
 **Official Documentation:**
+
 - Website: https://onnxruntime.ai/docs/tutorials/web/
 - npm: https://www.npmjs.com/package/onnxruntime-web
 - GitHub: https://github.com/microsoft/onnxruntime
 
 **Advantages:**
+
 - Optimized inference performance
 - Smaller model sizes (ORT format)
 - WebAssembly and WebGL backends
 - Support for WebGPU and WebNN
 
 **Installation:**
+
 ```bash
 npm install onnxruntime-web
 ```
 
 **Basic Usage:**
+
 ```javascript
 import * as ort from 'onnxruntime-web';
 
@@ -927,7 +963,7 @@ ort.env.wasm.wasmPaths = '/path/to/wasm/files/';
 // Load model
 const session = await ort.InferenceSession.create('/models/emotion-model.onnx', {
   executionProviders: ['webgl'], // or 'wasm', 'webgpu', 'webnn'
-  graphOptimizationLevel: 'all'
+  graphOptimizationLevel: 'all',
 });
 
 // Prepare input
@@ -943,6 +979,7 @@ const predictions = outputTensor.data;
 ```
 
 **Model Optimization:**
+
 ```python
 # Convert TensorFlow model to ONNX
 import tf2onnx
@@ -960,12 +997,14 @@ model_proto, _ = tf2onnx.convert.from_keras(model, input_signature=spec,
 ```
 
 **Optimization Techniques:**
+
 - Pack Mode: 75% memory reduction
 - ORT Format: Optimized binary size
 - Custom Builds: Include only needed operations
 - Quantization: 8-bit or 16-bit precision
 
 **Performance Comparison:**
+
 - WebGL: Best for GPU-heavy operations
 - WebAssembly: Better CPU performance
 - WebGPU: Next-generation GPU (experimental)
@@ -997,6 +1036,7 @@ model_proto, _ = tf2onnx.convert.from_keras(model, input_signature=spec,
    - ArcFace: State-of-the-art recognition
 
 **Model Download URLs:**
+
 ```javascript
 const MODEL_URLS = {
   faceApi: {
@@ -1004,12 +1044,12 @@ const MODEL_URLS = {
     faceLandmark68: '/models/face_landmark_68_model-weights_manifest.json',
     faceRecognition: '/models/face_recognition_model-weights_manifest.json',
     faceExpression: '/models/face_expression_model-weights_manifest.json',
-    ageGender: '/models/age_gender_model-weights_manifest.json'
+    ageGender: '/models/age_gender_model-weights_manifest.json',
   },
   tfjs: {
     blazeface: 'https://tfhub.dev/tensorflow/tfjs-model/blazeface/1/default/1',
-    faceMesh: 'https://tfhub.dev/mediapipe/tfjs-model/facemesh/1/default/1'
-  }
+    faceMesh: 'https://tfhub.dev/mediapipe/tfjs-model/facemesh/1/default/1',
+  },
 };
 ```
 
@@ -1020,6 +1060,7 @@ const MODEL_URLS = {
 **Workflow: Train → Convert → Deploy**
 
 **Step 1: Train Model (Python)**
+
 ```python
 import tensorflow as tf
 from tensorflow import keras
@@ -1053,6 +1094,7 @@ model.save('emotion_model.h5')
 ```
 
 **Step 2: Convert to TensorFlow.js**
+
 ```bash
 pip install tensorflowjs
 
@@ -1064,6 +1106,7 @@ tensorflowjs_converter \
 ```
 
 **Step 3: Deploy to Browser**
+
 ```javascript
 import * as tf from '@tensorflow/tfjs';
 
@@ -1071,7 +1114,8 @@ const model = await tf.loadGraphModel('/models/emotion_model/model.json');
 
 async function predictEmotion(imageElement) {
   // Preprocess
-  const tensor = tf.browser.fromPixels(imageElement)
+  const tensor = tf.browser
+    .fromPixels(imageElement)
     .resizeNearestNeighbor([48, 48])
     .toFloat()
     .div(255.0)
@@ -1081,8 +1125,7 @@ async function predictEmotion(imageElement) {
   const predictions = await model.predict(tensor);
   const values = await predictions.data();
 
-  const emotions = ['angry', 'disgusted', 'fearful', 'happy',
-                   'neutral', 'sad', 'surprised'];
+  const emotions = ['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised'];
   const maxIndex = values.indexOf(Math.max(...values));
 
   return {
@@ -1090,13 +1133,14 @@ async function predictEmotion(imageElement) {
     confidence: values[maxIndex],
     all: emotions.map((emotion, i) => ({
       emotion,
-      confidence: values[i]
-    }))
+      confidence: values[i],
+    })),
   };
 }
 ```
 
 **Face Recognition Dataset Preparation:**
+
 ```python
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -1139,6 +1183,7 @@ joblib.dump(clf, 'face_classifier.pkl')
 ### 4.3 Model Optimization for Browser
 
 **Quantization (Reduce Size):**
+
 ```python
 import tensorflow as tf
 
@@ -1163,6 +1208,7 @@ with open('emotion_model_quantized.tflite', 'wb') as f:
 ```
 
 **Model Pruning:**
+
 ```python
 import tensorflow_model_optimization as tfmot
 
@@ -1196,16 +1242,17 @@ model_for_export.save('pruned_model.h5')
 ```
 
 **Model Caching Strategy:**
+
 ```javascript
 // Service Worker caching for models
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open('ml-models-v1').then(cache => {
+    caches.open('ml-models-v1').then((cache) => {
       return cache.addAll([
         '/models/tiny_face_detector_model-weights_manifest.json',
         '/models/tiny_face_detector_model-shard1',
         '/models/face_expression_model-weights_manifest.json',
-        '/models/face_expression_model-shard1'
+        '/models/face_expression_model-shard1',
       ]);
     })
   );
@@ -1219,6 +1266,7 @@ self.addEventListener('install', event => {
 **Performance Optimization Strategies:**
 
 1. **Frame Skipping**
+
 ```javascript
 class OptimizedDetector {
   constructor(detector, skipFrames = 2) {
@@ -1242,6 +1290,7 @@ class OptimizedDetector {
 ```
 
 2. **Request Animation Frame**
+
 ```javascript
 class RealtimeDetector {
   constructor(detector, videoElement) {
@@ -1281,25 +1330,29 @@ class RealtimeDetector {
 ```
 
 3. **Web Workers for Parallel Processing**
+
 ```javascript
 // main.js
 const worker = new Worker('detector-worker.js');
 
 worker.postMessage({
   type: 'init',
-  modelUrl: '/models/emotion_model/model.json'
+  modelUrl: '/models/emotion_model/model.json',
 });
 
 async function processFrame(videoElement) {
   const imageData = captureImageData(videoElement);
 
-  worker.postMessage({
-    type: 'detect',
-    imageData: imageData
-  }, [imageData.data.buffer]); // Transfer ownership
+  worker.postMessage(
+    {
+      type: 'detect',
+      imageData: imageData,
+    },
+    [imageData.data.buffer]
+  ); // Transfer ownership
 }
 
-worker.onmessage = event => {
+worker.onmessage = (event) => {
   if (event.data.type === 'detection') {
     handleDetections(event.data.detections);
   }
@@ -1310,7 +1363,7 @@ importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs');
 
 let model;
 
-self.onmessage = async event => {
+self.onmessage = async (event) => {
   if (event.data.type === 'init') {
     model = await tf.loadGraphModel(event.data.modelUrl);
     self.postMessage({ type: 'ready' });
@@ -1324,21 +1377,19 @@ self.onmessage = async event => {
 
     self.postMessage({
       type: 'detection',
-      detections: results
+      detections: results,
     });
   }
 };
 ```
 
 4. **Batch Processing**
+
 ```javascript
 async function batchDetection(images) {
   // Process multiple images in one inference call
-  const tensors = images.map(img =>
-    tf.browser.fromPixels(img)
-      .resizeNearestNeighbor([224, 224])
-      .toFloat()
-      .div(255.0)
+  const tensors = images.map((img) =>
+    tf.browser.fromPixels(img).resizeNearestNeighbor([224, 224]).toFloat().div(255.0)
   );
 
   const batchTensor = tf.stack(tensors);
@@ -1348,13 +1399,14 @@ async function batchDetection(images) {
   // Cleanup
   batchTensor.dispose();
   predictions.dispose();
-  tensors.forEach(t => t.dispose());
+  tensors.forEach((t) => t.dispose());
 
   return results;
 }
 ```
 
 5. **GPU Acceleration**
+
 ```javascript
 // Enable WebGL backend
 await tf.setBackend('webgl');
@@ -1368,17 +1420,19 @@ console.log('WebGL supported:', await tf.env().getBool('WEBGL_VERSION'));
 const session = await ort.InferenceSession.create(modelPath, {
   executionProviders: ['webgl'], // GPU acceleration
   graphOptimizationLevel: 'all',
-  executionMode: 'parallel'
+  executionMode: 'parallel',
 });
 ```
 
 **Performance Targets:**
+
 - Face Detection: 30-60 FPS (using Tiny Face Detector)
 - Emotion Recognition: 10-20 FPS
 - Face Recognition: 5-10 FPS (with descriptors)
 - Combined Pipeline: 10 FPS minimum
 
 **Memory Management:**
+
 ```javascript
 // Monitor memory usage
 function checkMemory() {
@@ -1406,10 +1460,12 @@ setInterval(() => {
 ### 5.1 IndexedDB for Offline Data and Images
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
 - Using IndexedDB: https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
 
 **Key Features:**
+
 - Storage capacity: 2GB+ (up to 60% of disk space)
 - Stores complex objects, files, and blobs
 - Asynchronous API (non-blocking)
@@ -1417,6 +1473,7 @@ setInterval(() => {
 - Works in Web Workers
 
 **Database Schema Design:**
+
 ```javascript
 const DB_NAME = 'AttendanceDB';
 const DB_VERSION = 1;
@@ -1426,7 +1483,7 @@ const STORES = {
   attendance: 'attendance',
   faceImages: 'faceImages',
   faceDescriptors: 'faceDescriptors',
-  events: 'events'
+  events: 'events',
 };
 
 function openDatabase() {
@@ -1436,14 +1493,14 @@ function openDatabase() {
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
 
-    request.onupgradeneeded = event => {
+    request.onupgradeneeded = (event) => {
       const db = event.target.result;
 
       // Users store
       if (!db.objectStoreNames.contains(STORES.users)) {
         const usersStore = db.createObjectStore(STORES.users, {
           keyPath: 'id',
-          autoIncrement: true
+          autoIncrement: true,
         });
         usersStore.createIndex('email', 'email', { unique: true });
         usersStore.createIndex('name', 'name', { unique: false });
@@ -1453,20 +1510,19 @@ function openDatabase() {
       if (!db.objectStoreNames.contains(STORES.attendance)) {
         const attendanceStore = db.createObjectStore(STORES.attendance, {
           keyPath: 'id',
-          autoIncrement: true
+          autoIncrement: true,
         });
         attendanceStore.createIndex('userId', 'userId', { unique: false });
         attendanceStore.createIndex('eventId', 'eventId', { unique: false });
         attendanceStore.createIndex('timestamp', 'timestamp', { unique: false });
-        attendanceStore.createIndex('userEvent', ['userId', 'eventId'],
-                                    { unique: false });
+        attendanceStore.createIndex('userEvent', ['userId', 'eventId'], { unique: false });
       }
 
       // Face images store (for offline viewing)
       if (!db.objectStoreNames.contains(STORES.faceImages)) {
         const imagesStore = db.createObjectStore(STORES.faceImages, {
           keyPath: 'id',
-          autoIncrement: true
+          autoIncrement: true,
         });
         imagesStore.createIndex('userId', 'userId', { unique: false });
         imagesStore.createIndex('timestamp', 'timestamp', { unique: false });
@@ -1475,7 +1531,7 @@ function openDatabase() {
       // Face descriptors store (for recognition)
       if (!db.objectStoreNames.contains(STORES.faceDescriptors)) {
         const descriptorsStore = db.createObjectStore(STORES.faceDescriptors, {
-          keyPath: 'userId'
+          keyPath: 'userId',
         });
         descriptorsStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
@@ -1484,7 +1540,7 @@ function openDatabase() {
       if (!db.objectStoreNames.contains(STORES.events)) {
         const eventsStore = db.createObjectStore(STORES.events, {
           keyPath: 'id',
-          autoIncrement: true
+          autoIncrement: true,
         });
         eventsStore.createIndex('date', 'date', { unique: false });
         eventsStore.createIndex('status', 'status', { unique: false });
@@ -1495,6 +1551,7 @@ function openDatabase() {
 ```
 
 **CRUD Operations:**
+
 ```javascript
 class IndexedDBService {
   constructor() {
@@ -1581,6 +1638,7 @@ class IndexedDBService {
 ```
 
 **Storing Images and Binary Data:**
+
 ```javascript
 // Store face image as Blob
 async function storeFaceImage(userId, imageBlob) {
@@ -1591,7 +1649,7 @@ async function storeFaceImage(userId, imageBlob) {
     userId,
     image: imageBlob, // Blob object
     timestamp: Date.now(),
-    synced: false
+    synced: false,
   };
 
   const id = await db.save(STORES.faceImages, imageData);
@@ -1618,7 +1676,7 @@ async function storeFaceDescriptor(userId, descriptor) {
   const descriptorData = {
     userId,
     descriptor: Array.from(descriptor), // Convert to regular array
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   await db.save(STORES.faceDescriptors, descriptorData);
@@ -1632,14 +1690,15 @@ async function getAllFaceDescriptors() {
   const descriptors = await db.getAll(STORES.faceDescriptors);
 
   // Convert back to Float32Array
-  return descriptors.map(d => ({
+  return descriptors.map((d) => ({
     userId: d.userId,
-    descriptor: new Float32Array(d.descriptor)
+    descriptor: new Float32Array(d.descriptor),
   }));
 }
 ```
 
 **Attendance Recording:**
+
 ```javascript
 async function recordAttendance(userId, eventId, emotionData, faceImageBlob) {
   const db = new IndexedDBService();
@@ -1657,7 +1716,7 @@ async function recordAttendance(userId, eventId, emotionData, faceImageBlob) {
     emotionConfidence: emotionData.confidence,
     allEmotions: emotionData.all,
     imageId,
-    synced: false // For offline sync
+    synced: false, // For offline sync
   };
 
   const attendanceId = await db.save(STORES.attendance, attendance);
@@ -1677,6 +1736,7 @@ async function getEventAttendance(eventId) {
 ```
 
 **Using idb Library (Simplified API):**
+
 ```javascript
 import { openDB } from 'idb';
 
@@ -1684,10 +1744,10 @@ const dbPromise = openDB('AttendanceDB', 1, {
   upgrade(db) {
     const usersStore = db.createObjectStore('users', {
       keyPath: 'id',
-      autoIncrement: true
+      autoIncrement: true,
     });
     usersStore.createIndex('email', 'email', { unique: true });
-  }
+  },
 });
 
 // Simplified operations
@@ -1713,17 +1773,18 @@ async function getAllUsers() {
 
 **Comparison:**
 
-| Feature | LocalStorage | IndexedDB |
-|---------|-------------|-----------|
-| Storage Size | 5-10 MB | 2GB+ (60% of disk) |
-| Data Types | Strings only | Objects, Blobs, Arrays |
-| API | Synchronous | Asynchronous |
-| Performance | Blocks UI | Non-blocking |
-| Indexing | No | Yes |
-| Transactions | No | Yes |
-| Workers | No | Yes |
+| Feature      | LocalStorage | IndexedDB              |
+| ------------ | ------------ | ---------------------- |
+| Storage Size | 5-10 MB      | 2GB+ (60% of disk)     |
+| Data Types   | Strings only | Objects, Blobs, Arrays |
+| API          | Synchronous  | Asynchronous           |
+| Performance  | Blocks UI    | Non-blocking           |
+| Indexing     | No           | Yes                    |
+| Transactions | No           | Yes                    |
+| Workers      | No           | Yes                    |
 
 **LocalStorage Use Cases (Limited):**
+
 ```javascript
 // Only for small, simple data
 localStorage.setItem('theme', 'dark');
@@ -1741,6 +1802,7 @@ localStorage.setItem('lastEvent', eventId);
 ### 5.3 Backend Storage Solutions
 
 **Recommended Architecture:**
+
 ```
 Frontend (PWA)
   ↓
@@ -1754,6 +1816,7 @@ Cloud Storage (S3, GCS) + Database (PostgreSQL, MongoDB)
 ```
 
 **Background Sync Implementation:**
+
 ```javascript
 // Register background sync
 async function syncAttendance(attendanceData) {
@@ -1762,7 +1825,7 @@ async function syncAttendance(attendanceData) {
   await db.init();
   const id = await db.save(STORES.attendance, {
     ...attendanceData,
-    synced: false
+    synced: false,
   });
 
   // Register sync if supported
@@ -1776,7 +1839,7 @@ async function syncAttendance(attendanceData) {
 }
 
 // Service worker sync handler
-self.addEventListener('sync', event => {
+self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-attendance') {
     event.waitUntil(syncPendingAttendance());
   }
@@ -1789,7 +1852,7 @@ async function syncPendingAttendance() {
 
   // Get all unsynced records
   const allRecords = await store.getAll();
-  const unsyncedRecords = allRecords.filter(r => !r.synced);
+  const unsyncedRecords = allRecords.filter((r) => !r.synced);
 
   for (const record of unsyncedRecords) {
     try {
@@ -1810,6 +1873,7 @@ async function syncPendingAttendance() {
 ```
 
 **Backend API Design:**
+
 ```javascript
 // API endpoints structure
 const API_BASE = 'https://api.attendance-system.com';
@@ -1832,7 +1896,7 @@ const API_ENDPOINTS = {
   // Events
   getEvents: `${API_BASE}/events`,
   getEvent: (id) => `${API_BASE}/events/${id}`,
-  createEvent: `${API_BASE}/events`
+  createEvent: `${API_BASE}/events`,
 };
 
 // Upload attendance with image
@@ -1856,8 +1920,8 @@ async function uploadAttendanceToServer(attendance) {
     method: 'POST',
     body: formData,
     headers: {
-      'Authorization': `Bearer ${getAuthToken()}`
-    }
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
   });
 
   if (!response.ok) {
@@ -1869,6 +1933,7 @@ async function uploadAttendanceToServer(attendance) {
 ```
 
 **Cloud Storage Integration:**
+
 ```javascript
 // Direct upload to S3 with pre-signed URL
 async function uploadToS3(file, userId) {
@@ -1877,13 +1942,13 @@ async function uploadToS3(file, userId) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${getAuthToken()}`
+      Authorization: `Bearer ${getAuthToken()}`,
     },
     body: JSON.stringify({
       userId,
       fileName: `face-${userId}-${Date.now()}.jpg`,
-      contentType: 'image/jpeg'
-    })
+      contentType: 'image/jpeg',
+    }),
   });
 
   const { uploadUrl, fileUrl } = await response.json();
@@ -1893,8 +1958,8 @@ async function uploadToS3(file, userId) {
     method: 'PUT',
     body: file,
     headers: {
-      'Content-Type': 'image/jpeg'
-    }
+      'Content-Type': 'image/jpeg',
+    },
   });
 
   return fileUrl;
@@ -1917,30 +1982,30 @@ async function uploadToS3(file, userId) {
 6. **Bootstrap 5** - Classic, mobile-first
 
 **Installation (Tailwind CSS):**
+
 ```bash
 npm install -D tailwindcss postcss autoprefixer
 npx tailwindcss init -p
 ```
 
 **Configuration:**
+
 ```javascript
 // tailwind.config.js
 module.exports = {
-  content: [
-    "./src/**/*.{html,js,jsx,ts,tsx}",
-  ],
+  content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
         primary: '#2196F3',
         secondary: '#FF5722',
         success: '#4CAF50',
-        error: '#F44336'
-      }
+        error: '#F44336',
+      },
     },
   },
   plugins: [],
-}
+};
 ```
 
 ---
@@ -1948,206 +2013,212 @@ module.exports = {
 ### 6.2 Camera UI Components
 
 **Complete Camera Interface:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Face Recognition Camera</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Recognition Camera</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #1a1a1a;
-      color: #fff;
-      overflow: hidden;
-    }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #1a1a1a;
+        color: #fff;
+        overflow: hidden;
+      }
 
-    .camera-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+      .camera-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-    #video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+      #video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
-    #overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
+      #overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
 
-    .controls {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 20px;
-      z-index: 10;
-    }
+      .controls {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+        z-index: 10;
+      }
 
-    .btn {
-      padding: 15px 30px;
-      border: none;
-      border-radius: 50px;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
+      .btn {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
 
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.05);
-    }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+      }
 
-    .btn-primary {
-      background: #2196F3;
-    }
+      .btn-primary {
+        background: #2196f3;
+      }
 
-    .btn-primary:hover {
-      background: #1976D2;
-    }
+      .btn-primary:hover {
+        background: #1976d2;
+      }
 
-    .info-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(10px);
-      padding: 20px;
-      border-radius: 10px;
-      min-width: 250px;
-    }
+      .info-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: 10px;
+        min-width: 250px;
+      }
 
-    .face-info {
-      margin-bottom: 15px;
-    }
+      .face-info {
+        margin-bottom: 15px;
+      }
 
-    .emotion-bar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-      font-size: 14px;
-    }
+      .emotion-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
 
-    .emotion-progress {
-      height: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
+      .emotion-progress {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
 
-    .emotion-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #2196F3, #21CBF3);
-      transition: width 0.3s;
-    }
+      .emotion-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2196f3, #21cbf3);
+        transition: width 0.3s;
+      }
 
-    .status {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 10px 20px;
-      background: rgba(76, 175, 80, 0.9);
-      border-radius: 5px;
-      font-size: 14px;
-    }
+      .status {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 10px 20px;
+        background: rgba(76, 175, 80, 0.9);
+        border-radius: 5px;
+        font-size: 14px;
+      }
 
-    .status.error {
-      background: rgba(244, 67, 54, 0.9);
-    }
+      .status.error {
+        background: rgba(244, 67, 54, 0.9);
+      }
 
-    .loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-    }
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
 
-    .spinner {
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top: 3px solid #fff;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 10px;
-    }
+      .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid #fff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
 
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="camera-container">
-    <video id="video" autoplay playsinline></video>
-    <canvas id="overlay"></canvas>
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="camera-container">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="overlay"></canvas>
 
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Loading models...</p>
-    </div>
-
-    <div id="status" class="status hidden"></div>
-
-    <div id="info-panel" class="info-panel hidden">
-      <div class="face-info">
-        <h3>Face Detected</h3>
-        <p id="user-name">Unknown</p>
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading models...</p>
       </div>
 
-      <div id="emotions">
-        <h4>Emotions:</h4>
-        <!-- Emotion bars will be inserted here -->
+      <div id="status" class="status hidden"></div>
+
+      <div id="info-panel" class="info-panel hidden">
+        <div class="face-info">
+          <h3>Face Detected</h3>
+          <p id="user-name">Unknown</p>
+        </div>
+
+        <div id="emotions">
+          <h4>Emotions:</h4>
+          <!-- Emotion bars will be inserted here -->
+        </div>
+
+        <div class="face-info">
+          <p><strong>Confidence:</strong> <span id="confidence">0%</span></p>
+          <p><strong>FPS:</strong> <span id="fps">0</span></p>
+        </div>
       </div>
 
-      <div class="face-info">
-        <p><strong>Confidence:</strong> <span id="confidence">0%</span></p>
-        <p><strong>FPS:</strong> <span id="fps">0</span></p>
+      <div class="controls">
+        <button id="btn-switch" class="btn">Switch Camera</button>
+        <button id="btn-capture" class="btn btn-primary">Check In</button>
+        <button id="btn-stop" class="btn">Stop</button>
       </div>
     </div>
 
-    <div class="controls">
-      <button id="btn-switch" class="btn">Switch Camera</button>
-      <button id="btn-capture" class="btn btn-primary">Check In</button>
-      <button id="btn-stop" class="btn">Stop</button>
-    </div>
-  </div>
-
-  <script src="camera-app.js" type="module"></script>
-</body>
+    <script src="camera-app.js" type="module"></script>
+  </body>
 </html>
 ```
 
 **JavaScript Implementation:**
+
 ```javascript
 // camera-app.js
 import * as faceapi from 'face-api.js';
@@ -2194,7 +2265,7 @@ class CameraApp {
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
     ]);
   }
 
@@ -2203,8 +2274,8 @@ class CameraApp {
       video: {
         facingMode: this.facingMode,
         width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
+        height: { ideal: 720 },
+      },
     });
 
     this.video.srcObject = this.stream;
@@ -2240,10 +2311,10 @@ class CameraApp {
 
     if (detections.length > 0) {
       // Resize detections
-      const resizedDetections = faceapi.resizeResults(
-        detections,
-        { width: this.canvas.width, height: this.canvas.height }
-      );
+      const resizedDetections = faceapi.resizeResults(detections, {
+        width: this.canvas.width,
+        height: this.canvas.height,
+      });
 
       // Draw
       faceapi.draw.drawDetections(this.canvas, resizedDetections);
@@ -2326,7 +2397,7 @@ class CameraApp {
     canvas.getContext('2d').drawImage(this.video, 0, 0);
 
     // Convert to blob
-    const blob = await new Promise(resolve => {
+    const blob = await new Promise((resolve) => {
       canvas.toBlob(resolve, 'image/jpeg', 0.95);
     });
 
@@ -2339,7 +2410,7 @@ class CameraApp {
   stop() {
     this.isDetecting = false;
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach((track) => track.stop());
     }
   }
 
@@ -2370,6 +2441,7 @@ app.init();
 ### 6.3 Loading States and Feedback
 
 **Loading Component:**
+
 ```javascript
 class LoadingManager {
   constructor() {
@@ -2379,7 +2451,7 @@ class LoadingManager {
   start(taskId, message) {
     this.tasks.set(taskId, {
       message,
-      startTime: Date.now()
+      startTime: Date.now(),
     });
     this.render();
   }
@@ -2404,19 +2476,27 @@ class LoadingManager {
       return;
     }
 
-    const html = Array.from(this.tasks.entries()).map(([id, task]) => `
+    const html = Array.from(this.tasks.entries())
+      .map(
+        ([id, task]) => `
       <div class="loading-task">
         <div class="loading-message">${task.message}</div>
-        ${task.progress !== undefined ? `
+        ${
+          task.progress !== undefined
+            ? `
           <div class="progress-bar">
             <div class="progress-fill" style="width: ${task.progress}%"></div>
           </div>
           <div class="progress-text">${task.progress}%</div>
-        ` : `
+        `
+            : `
           <div class="spinner"></div>
-        `}
+        `
+        }
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     container.innerHTML = html;
   }
@@ -2431,7 +2511,7 @@ async function loadModelsWithProgress() {
     { name: 'tinyFaceDetector', url: '/models/tiny_face_detector_model-weights_manifest.json' },
     { name: 'faceLandmark', url: '/models/face_landmark_68_model-weights_manifest.json' },
     { name: 'faceRecognition', url: '/models/face_recognition_model-weights_manifest.json' },
-    { name: 'faceExpression', url: '/models/face_expression_model-weights_manifest.json' }
+    { name: 'faceExpression', url: '/models/face_expression_model-weights_manifest.json' },
   ];
 
   let loaded = 0;
@@ -2455,11 +2535,13 @@ async function loadModelsWithProgress() {
 ### 7.1 Web Crypto API
 
 **Official Documentation:**
+
 - MDN: https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API
 - SubtleCrypto: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto
 - W3C Spec: https://w3c.github.io/webcrypto/
 
 **Encryption Example:**
+
 ```javascript
 class BiometricEncryption {
   constructor() {
@@ -2471,7 +2553,7 @@ class BiometricEncryption {
     const key = await this.crypto.generateKey(
       {
         name: 'AES-GCM',
-        length: 256
+        length: 256,
       },
       true, // extractable
       ['encrypt', 'decrypt']
@@ -2492,7 +2574,7 @@ class BiometricEncryption {
     const encrypted = await this.crypto.encrypt(
       {
         name: 'AES-GCM',
-        iv: iv
+        iv: iv,
       },
       key,
       data
@@ -2500,7 +2582,7 @@ class BiometricEncryption {
 
     return {
       encrypted: new Uint8Array(encrypted),
-      iv: iv
+      iv: iv,
     };
   }
 
@@ -2509,7 +2591,7 @@ class BiometricEncryption {
     const decrypted = await this.crypto.decrypt(
       {
         name: 'AES-GCM',
-        iv: iv
+        iv: iv,
       },
       key,
       encryptedData
@@ -2538,7 +2620,7 @@ class BiometricEncryption {
       keyData.key,
       {
         name: 'AES-GCM',
-        length: 256
+        length: 256,
       },
       true,
       ['encrypt', 'decrypt']
@@ -2571,7 +2653,7 @@ async function secureFaceStorage(userId, descriptor) {
     userId,
     encryptedDescriptor: Array.from(encrypted),
     iv: Array.from(iv),
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 }
 ```
@@ -2583,6 +2665,7 @@ async function secureFaceStorage(userId, descriptor) {
 **Key Requirements:**
 
 1. **Explicit Consent**
+
 ```javascript
 class ConsentManager {
   async requestConsent() {
@@ -2590,14 +2673,14 @@ class ConsentManager {
       faceDetection: false,
       emotionAnalysis: false,
       dataStorage: false,
-      dataSharing: false
+      dataSharing: false,
     };
 
     // Show consent dialog
     const dialog = document.getElementById('consent-dialog');
     dialog.showModal();
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       document.getElementById('consent-accept').onclick = () => {
         consent.faceDetection = document.getElementById('consent-face').checked;
         consent.emotionAnalysis = document.getElementById('consent-emotion').checked;
@@ -2619,7 +2702,7 @@ class ConsentManager {
       consent: consent,
       timestamp: Date.now(),
       ipAddress: await this.getIP(),
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     const db = new IndexedDBService();
@@ -2630,7 +2713,7 @@ class ConsentManager {
     await fetch('/api/consent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(consentRecord)
+      body: JSON.stringify(consentRecord),
     });
   }
 
@@ -2648,6 +2731,7 @@ class ConsentManager {
 ```
 
 2. **Data Protection Impact Assessment (DPIA)**
+
 ```javascript
 // DPIA documentation
 const DPIA = {
@@ -2657,7 +2741,7 @@ const DPIA = {
     'Face descriptors (128D vectors)',
     'Emotion analysis results',
     'Attendance timestamps',
-    'User identifiers'
+    'User identifiers',
   ],
   legalBasis: 'Explicit consent (GDPR Article 6(1)(a) and 9(2)(a))',
   retentionPeriod: '90 days after event completion',
@@ -2665,26 +2749,27 @@ const DPIA = {
     'Face descriptors stored instead of full images when possible',
     'Emotion data aggregated after 24 hours',
     'No audio recording',
-    'No background environment capture'
+    'No background environment capture',
   ],
   securityMeasures: [
     'End-to-end encryption using AES-256-GCM',
     'Data stored in encrypted IndexedDB',
     'HTTPS-only communication',
     'Regular security audits',
-    'Access logging and monitoring'
+    'Access logging and monitoring',
   ],
   userRights: [
     'Right to access data',
     'Right to deletion',
     'Right to data portability',
     'Right to withdraw consent',
-    'Right to object to processing'
-  ]
+    'Right to object to processing',
+  ],
 };
 ```
 
 3. **Data Retention and Deletion**
+
 ```javascript
 class DataRetentionManager {
   constructor() {
@@ -2738,8 +2823,8 @@ class DataRetentionManager {
     await fetch(`/api/users/${userId}/data`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${getAuthToken()}`
-      }
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     });
   }
 
@@ -2751,7 +2836,7 @@ class DataRetentionManager {
       user: await db.get(STORES.users, userId),
       faceDescriptor: await db.get(STORES.faceDescriptors, userId),
       images: await db.getByIndex(STORES.faceImages, 'userId', userId),
-      attendance: await db.getByIndex(STORES.attendance, 'userId', userId)
+      attendance: await db.getByIndex(STORES.attendance, 'userId', userId),
     };
 
     // Convert to JSON
@@ -2768,13 +2853,17 @@ class DataRetentionManager {
 }
 
 // Schedule automatic cleanup
-setInterval(() => {
-  const retentionManager = new DataRetentionManager();
-  retentionManager.cleanupOldData();
-}, 24 * 60 * 60 * 1000); // Daily
+setInterval(
+  () => {
+    const retentionManager = new DataRetentionManager();
+    retentionManager.cleanupOldData();
+  },
+  24 * 60 * 60 * 1000
+); // Daily
 ```
 
 4. **Privacy-Preserving Techniques**
+
 ```javascript
 // Edge processing (no server upload)
 async function processLocallyOnly(videoElement) {
@@ -2798,7 +2887,7 @@ class FederatedLearning {
 
     await model.fit(localData.x, localData.y, {
       epochs: 5,
-      batchSize: 32
+      batchSize: 32,
     });
 
     // Extract only weights (not data)
@@ -2831,6 +2920,7 @@ function anonymizeAttendance(attendance) {
 ### 7.3 Web Authentication API (WebAuthn)
 
 **For secure user authentication:**
+
 ```javascript
 // Register biometric authentication
 async function registerBiometric(userId) {
@@ -2839,23 +2929,23 @@ async function registerBiometric(userId) {
       challenge: new Uint8Array(32),
       rp: {
         name: 'Attendance System',
-        id: 'attendance-system.com'
+        id: 'attendance-system.com',
       },
       user: {
-        id: Uint8Array.from(userId, c => c.charCodeAt(0)),
+        id: Uint8Array.from(userId, (c) => c.charCodeAt(0)),
         name: 'user@example.com',
-        displayName: 'User Name'
+        displayName: 'User Name',
       },
       pubKeyCredParams: [
         { type: 'public-key', alg: -7 }, // ES256
-        { type: 'public-key', alg: -257 } // RS256
+        { type: 'public-key', alg: -257 }, // RS256
       ],
       authenticatorSelection: {
         authenticatorAttachment: 'platform', // Device biometrics
-        userVerification: 'required'
+        userVerification: 'required',
       },
-      timeout: 60000
-    }
+      timeout: 60000,
+    },
   });
 
   // Send credential to server
@@ -2868,9 +2958,9 @@ async function registerBiometric(userId) {
       type: credential.type,
       response: {
         clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-        attestationObject: Array.from(new Uint8Array(credential.response.attestationObject))
-      }
-    })
+        attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
+      },
+    }),
   });
 }
 
@@ -2880,8 +2970,8 @@ async function authenticateWithBiometric() {
     publicKey: {
       challenge: new Uint8Array(32),
       timeout: 60000,
-      userVerification: 'required'
-    }
+      userVerification: 'required',
+    },
   });
 
   // Verify with server
@@ -2895,9 +2985,9 @@ async function authenticateWithBiometric() {
       response: {
         clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
         authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
-        signature: Array.from(new Uint8Array(credential.response.signature))
-      }
-    })
+        signature: Array.from(new Uint8Array(credential.response.signature)),
+      },
+    }),
   });
 
   const result = await response.json();
@@ -2911,18 +3001,19 @@ async function authenticateWithBiometric() {
 
 ### 8.1 Browser Support Matrix (2025)
 
-| Feature | Chrome/Edge | Firefox | Safari | Mobile |
-|---------|-------------|---------|--------|--------|
-| Service Workers | ✅ Full | ✅ Full | ✅ Full | ✅ iOS 11.3+ |
-| getUserMedia | ✅ Full | ✅ Full | ✅ Full | ⚠️ iOS limited |
-| IndexedDB | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
-| Web Crypto | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
-| Push Notifications | ✅ Full | ✅ Full | ⚠️ Limited | ⚠️ iOS 16.4+ |
-| WebGL | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
-| WebAssembly | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
-| WebGPU | ✅ Experimental | ⚠️ In Progress | ❌ No | ❌ No |
+| Feature            | Chrome/Edge     | Firefox        | Safari     | Mobile         |
+| ------------------ | --------------- | -------------- | ---------- | -------------- |
+| Service Workers    | ✅ Full         | ✅ Full        | ✅ Full    | ✅ iOS 11.3+   |
+| getUserMedia       | ✅ Full         | ✅ Full        | ✅ Full    | ⚠️ iOS limited |
+| IndexedDB          | ✅ Full         | ✅ Full        | ✅ Full    | ✅ Full        |
+| Web Crypto         | ✅ Full         | ✅ Full        | ✅ Full    | ✅ Full        |
+| Push Notifications | ✅ Full         | ✅ Full        | ⚠️ Limited | ⚠️ iOS 16.4+   |
+| WebGL              | ✅ Full         | ✅ Full        | ✅ Full    | ✅ Full        |
+| WebAssembly        | ✅ Full         | ✅ Full        | ✅ Full    | ✅ Full        |
+| WebGPU             | ✅ Experimental | ⚠️ In Progress | ❌ No      | ❌ No          |
 
 **iOS/Safari Limitations:**
+
 - getUserMedia in WebViews: Not supported
 - PWA getUserMedia: Not supported in App Store PWAs
 - Background Sync: Not supported
@@ -2942,7 +3033,7 @@ class FeatureDetector {
       webCrypto: this.hasWebCrypto(),
       pushNotifications: this.hasPushNotifications(),
       webGL: this.hasWebGL(),
-      webAssembly: this.hasWebAssembly()
+      webAssembly: this.hasWebAssembly(),
     };
   }
 
@@ -2953,7 +3044,7 @@ class FeatureDetector {
   static async hasCamera() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      return devices.some(device => device.kind === 'videoinput');
+      return devices.some((device) => device.kind === 'videoinput');
     } catch {
       return false;
     }
@@ -3019,6 +3110,7 @@ async function initializeApp() {
 ## 9. Complete Implementation Example
 
 **File Structure:**
+
 ```
 attendance-system/
 ├── public/
@@ -3047,6 +3139,7 @@ attendance-system/
 ```
 
 **package.json:**
+
 ```json
 {
   "name": "attendance-system",
@@ -3074,13 +3167,14 @@ attendance-system/
 ## 10. Testing and Debugging
 
 **Performance Monitoring:**
+
 ```javascript
 class PerformanceMonitor {
   constructor() {
     this.metrics = {
       fps: 0,
       inferenceTime: 0,
-      memoryUsage: 0
+      memoryUsage: 0,
     };
   }
 
@@ -3107,6 +3201,7 @@ class PerformanceMonitor {
 ```
 
 **Debugging Tools:**
+
 - Chrome DevTools > Application > Service Workers
 - Chrome DevTools > Application > Storage (IndexedDB)
 - Chrome DevTools > Network (Cache)
@@ -3141,17 +3236,20 @@ class PerformanceMonitor {
 ## 12. Useful Resources
 
 **Official Documentation:**
+
 - MDN Web Docs: https://developer.mozilla.org
 - web.dev PWA Guide: https://web.dev/learn/pwa/
 - TensorFlow.js: https://www.tensorflow.org/js
 - W3C Specifications: https://www.w3.org/TR/
 
 **Community Resources:**
+
 - Stack Overflow (PWA tag)
 - GitHub (face-api.js, tfjs-models)
 - Reddit (r/webdev, r/MachineLearning)
 
 **Tools:**
+
 - Lighthouse (PWA auditing)
 - Workbox (Service Worker library)
 - TensorFlow.js Converter
@@ -3164,6 +3262,7 @@ class PerformanceMonitor {
 **Document Version:** 1.0
 **Last Updated:** October 14, 2025
 **Technology Stack:**
+
 - Progressive Web Apps (Latest)
 - Service Workers API
 - TensorFlow.js 4.x
