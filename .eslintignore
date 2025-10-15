@@ -1,0 +1,8 @@
+.next
+node_modules
+.worktrees
+out
+dist
+build
+*.config.js
+next-env.d.ts
